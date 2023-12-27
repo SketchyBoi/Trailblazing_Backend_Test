@@ -17,14 +17,6 @@ import java.text.SimpleDateFormat;
 @RestController
 @RequestMapping("/api/person")
 public class PersonApiController {
-    //     @Autowired
-    // private JwtTokenUtil jwtGen;
-    /*
-    #### RESTful API ####
-    Resource: https://spring.io/guides/gs/rest-service/
-    */
-
-    // Autowired enables Control to connect POJO Object through JPA
     @Autowired
     private PersonJpaRepository repository;
 
@@ -68,44 +60,15 @@ public class PersonApiController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST); 
     }
 
-    @GetMapping("/currentUserId")
-    public ResponseEntity<Long> getCurrentUserId() {
-        // Retrieve the authentication object from the security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Check if the authentication is not null and the principal is an instance of UserDetails
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-            // Cast to your custom UserDetails implementation (Person in this case) and retrieve the user ID
-            if (userDetails instanceof Person) {
-                Long userId = ((Person) userDetails).getUserId();
-                return new ResponseEntity<>(userId, HttpStatus.OK);
-            }
-        }
-
-        // Return unauthorized status if the user is not authenticated
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-    }
-
-
     /*
     POST Aa record by Requesting Parameters from URI
      */
-    @PostMapping( "/post")
+    @PostMapping("/post")
     public ResponseEntity<Object> postPerson(@RequestParam("email") String email,
                                              @RequestParam("password") String password,
-                                             @RequestParam("name") String name,
-                                             @RequestParam("dob") String dobString,
-                                             @RequestParam("counter") int counter) {
-        Date dob;
-        try {
-            dob = new SimpleDateFormat("MM-dd-yyyy").parse(dobString);
-        } catch (Exception e) {
-            return new ResponseEntity<>(dobString +" error; try MM-dd-yyyy", HttpStatus.BAD_REQUEST);
-        }
+                                             @RequestParam("name") String name) {
         // A person object WITHOUT ID will create a new record with default roles as student
-        Person person = new Person(email, password, name, dob, counter);
+        Person person = new Person(email, password, name);
         personDetailsService.save(person);
         return new ResponseEntity<>(email +" is created successfully", HttpStatus.CREATED);
     }
@@ -128,32 +91,22 @@ public class PersonApiController {
     /*
     The personStats API adds stats by Date to Person table 
     */
-    @PostMapping(value = "/setStats", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Person> personStats(@RequestBody final Map<String,Object> stat_map) {
-        // find ID
-        long id=Long.parseLong((String)stat_map.get("id"));  
-        Optional<Person> optional = repository.findById((id));
-        if (optional.isPresent()) {  // Good ID
-            Person person = optional.get();  // value from findByID
-
-            // Extract Attributes from JSON
-            Map<String, Object> attributeMap = new HashMap<>();
-            for (Map.Entry<String,Object> entry : stat_map.entrySet())  {
-                // Add all attribute other thaN "date" to the "attribute_map"
-                if (!entry.getKey().equals("date") && !entry.getKey().equals("id"))
-                    attributeMap.put(entry.getKey(), entry.getValue());
-            }
-
-            // Set Date and Attributes to SQL HashMap
-            Map<String, Map<String, Object>> date_map = new HashMap<>();
-            date_map.put( (String) stat_map.get("date"), attributeMap );
-            person.setStats(date_map);  // BUG, needs to be customized to replace if existing or append if new
-            repository.save(person);  // conclude by writing the stats updates
-
-            // return Person with update Stats
+    @PostMapping("/setStats")
+    public ResponseEntity<Person> personStats(@RequestBody final Map<String, String> requestMap, @RequestParam("email") String email) {
+        try {
+            // Retrieve the user by email instead of ID
+            Person person = repository.findByEmail(email);
+            // Extract stats data from requestMap and update the user
+            Map<String, Object> statMap = new HashMap<>(requestMap);
+            statMap.remove("email"); // Remove email from stats data
+            person.updateStatsFromJson(statMap);
+            repository.save(person);
             return new ResponseEntity<>(person, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        // return Bad ID
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST); 
     }
+
+
 }

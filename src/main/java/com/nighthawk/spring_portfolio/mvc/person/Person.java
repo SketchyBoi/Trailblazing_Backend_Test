@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -67,37 +68,19 @@ public class Person {
     @Size(min = 2, max = 30, message = "Name (2 to 30 chars)")
     private String name;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date dob;
-
-    private int addition;
-
-    private int counter;
-
     // To be implemented
     @ManyToMany(fetch = EAGER)
     private Collection<PersonRole> roles = new ArrayList<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private Map<String,Map<String, Object>> stats = new HashMap<>(); 
-    
+    private Map<String, Object> stats = new HashMap<>();    
 
     // Constructor used when building object from an API
-    public Person(String email, String password, String name, Date dob, int counter) {
+    public Person(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;
-        this.dob = dob;
-        this.counter = counter;
-    }
-
-    // A custom getter to return age from dob attribute
-    public int getAge() {
-        if (this.dob != null) {
-            LocalDate birthDay = this.dob.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            return Period.between(birthDay, LocalDate.now()).getYears(); }
-        return -1;
     }
 
     public Long getUserId() {
@@ -112,27 +95,31 @@ public class Person {
         p1.setName("Thomas Edison");
         p1.setEmail("toby@gmail.com");
         p1.setPassword("123Toby!");
-        // adding Note to notes collection
-        try {  // All data that converts formats could fail
-            Date d = new SimpleDateFormat("MM-dd-yyyy").parse("01-01-1840");
-            p1.setDob(d);
-        } catch (Exception e) {
-            // no actions as dob default is good enough
-        }
 
         Person p2 = new Person();
         p2.setName("Alexander Graham Bell");
         p2.setEmail("lexb@gmail.com");
         p2.setPassword("123LexB!");
-        try {
-            Date d = new SimpleDateFormat("MM-dd-yyyy").parse("01-01-1845");
-            p2.setDob(d);
-        } catch (Exception e) {
-        }
 
         // Array definition and data initialization
         Person persons[] = {p1, p2};
         return(persons);
+    }
+
+    public Map<String, Object> getStats() {
+        return stats;
+    }
+
+    public void setStats(Map<String, Object> stats) {
+        this.stats = stats;
+    }
+
+    public void updateStatsFromJson(Map<String, Object> jsonData) {
+        for (Map.Entry<String, Object> entry : jsonData.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            stats.put(key, value);
+        }
     }
 
     public static void main(String[] args) {
