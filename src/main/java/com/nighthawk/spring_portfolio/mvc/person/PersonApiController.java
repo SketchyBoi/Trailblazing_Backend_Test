@@ -4,15 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
-
+import java.io.File;
 import java.util.*;
-import java.text.SimpleDateFormat;
 
 @RestController
 @RequestMapping("/api/person")
@@ -109,4 +105,127 @@ public class PersonApiController {
     }
 
 
+    @GetMapping("/getStats")
+    public ResponseEntity<Map<String, Object>> getPersonStats(@RequestParam("email") String email) {
+        try {
+            // Retrieve the user by email
+            Person person = repository.findByEmail(email);
+
+            // Check if the person exists
+            if (person == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            // Get and return the person's stats
+            Map<String, Object> stats = person.getStats();
+            return new ResponseEntity<>(stats, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/getCheckDay")
+    public ResponseEntity<Map<String, Object>> getCheckDay(@RequestParam("email") String email) {
+        try {
+            // Retrieve the user by email
+            Person person = repository.findByEmail(email);
+
+            // Check if the person exists
+            if (person == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            // Get and return the person's checkDay map
+            Map<String, Object> checkDay = person.getCheckDay();
+            return new ResponseEntity<>(checkDay, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/editCheckDay")
+    public ResponseEntity<Object> editCheckDay(@RequestParam("email") String email,
+                                               @RequestParam("day") String day,
+                                               @RequestParam("value") String valueStr) {
+        try {
+            // Retrieve the user by email
+            Person person = repository.findByEmail(email);
+            
+            boolean value = Boolean.parseBoolean(valueStr);
+
+            // Check if the person exists
+            if (person == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            // Edit the checkDay map for the specified day
+            person.editCheckDay(day, value);
+
+            // Save the updated person to the repository
+            repository.save(person);
+
+            return new ResponseEntity<>(day + " successfully changed to " + value, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/calculateReward")
+    public ResponseEntity<Object> calculateReward(
+            @RequestParam("email") String email,
+            @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("File is empty", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            File tempFile = File.createTempFile("temp", null);
+            file.transferTo(tempFile);
+
+            double reward = TokenPrediction.calculateRewardFromFile(tempFile);
+
+            // Retrieve the person by email
+            Person person = repository.findByEmail(email);
+
+            // Check if the person exists
+            if (person != null) {
+                // Add the reward to heldWeeklyTokens
+                person.addWeeklyTokens(reward);
+
+                // Save the updated person to the repository
+                repository.save(person);
+
+                // Return a response
+                return new ResponseEntity<>("Reward for " + email + ": " + reward + " tokens. Updated heldWeeklyTokens: " + person.getHeldWeeklyTokens(), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Person with email " + email + " not found", HttpStatus.NOT_FOUND);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @GetMapping("/getHeldWeeklyTokens")
+    public ResponseEntity<Double> getHeldWeeklyTokens(@RequestParam("email") String email) {
+        try {
+            // Retrieve the person by email
+            Person person = repository.findByEmail(email);
+
+            // Check if the person exists
+            if (person != null) {
+                // Return the heldWeeklyTokens
+                return new ResponseEntity<>(person.getHeldWeeklyTokens(), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

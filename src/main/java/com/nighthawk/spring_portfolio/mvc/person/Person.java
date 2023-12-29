@@ -72,11 +72,21 @@ public class Person {
     @ManyToMany(fetch = EAGER)
     private Collection<PersonRole> roles = new ArrayList<>();
 
+
+    @NonNull
+    private double heldWeeklyTokens;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private Map<String, Object> stats = new HashMap<>();    
+    private Map<String, Object> stats = new HashMap<>();
 
-    // Constructor used when building object from an API
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, Object> checkDay = new HashMap<>();
+    public void editCheckDay(String day, boolean value) {
+        checkDay.put(day, value);
+    }
+    
     public Person(String email, String password, String name) {
         this.email = email;
         this.password = password;
@@ -87,19 +97,35 @@ public class Person {
         return id;
     }
 
+    public void addWeeklyTokens(double tokens) {
+        this.heldWeeklyTokens += tokens;
+    }
+
+    private void initCheckDay() {
+        String[] daysOfWeek = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+
+        for (String day : daysOfWeek) {
+            editCheckDay(day, false);
+        }
+    }
+
     // Initialize static test data 
     public static Person[] init() {
 
         // basics of class construction
         Person p1 = new Person();
-        p1.setName("Thomas Edison");
-        p1.setEmail("toby@gmail.com");
-        p1.setPassword("123Toby!");
+        p1.setName("Raymond");
+        p1.setEmail("hi@gmail.com");
+        p1.setPassword("sampletext");
+        p1.setHeldWeeklyTokens(0);
+        p1.initCheckDay();
 
         Person p2 = new Person();
         p2.setName("Alexander Graham Bell");
         p2.setEmail("lexb@gmail.com");
         p2.setPassword("123LexB!");
+        p2.setHeldWeeklyTokens(0);
+        p2.initCheckDay();
 
         // Array definition and data initialization
         Person persons[] = {p1, p2};
