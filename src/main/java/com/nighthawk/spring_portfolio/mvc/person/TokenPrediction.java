@@ -98,9 +98,9 @@ class GeolocationRewardSystem {
     private double calculateDistanceBonus(double totalDistance) {
         // Bonus rewards based on distance thresholds
         if (totalDistance > 5000.0) {
-            return 5;   // Bonus 5 coins for distances greater than 5000 meters
+            return 20;   // Bonus 5 coins for distances greater than 5000 meters
         } else if (totalDistance > 10000.0) {
-            return 10;  // Bonus 10 coins for distances greater than 10000 meters
+            return 50;  // Bonus 10 coins for distances greater than 10000 meters
         } else {
             return 0;   // No bonus for distances below the thresholds
         }

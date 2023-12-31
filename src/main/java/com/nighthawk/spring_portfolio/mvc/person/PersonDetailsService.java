@@ -141,6 +141,19 @@ public class PersonDetailsService implements UserDetailsService {  // "implement
             }
         }
     }
+    @Transactional
+    public void clearAllUserData() {
+        // Retrieve all users from the database
+        Iterable<Person> allUsers = personJpaRepository.findAll();
+
+        // Clear stats and check_day for each user
+        allUsers.forEach(user -> {
+            user.getStats().clear();
+            user.getCheckDay().clear();
+            user.setHeldWeeklyTokens(0);
+            personJpaRepository.save(user);
+        });
+    }
 
 
     

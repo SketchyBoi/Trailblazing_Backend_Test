@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -227,5 +228,20 @@ public class PersonApiController {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+    @DeleteMapping("/clearAllUserData")
+    public ResponseEntity<String> clearAllUserData() {
+        try {
+            // Call the service method to clear data for all users
+            personDetailsService.clearAllUserData();
+            return ResponseEntity.ok("All users' data cleared successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error clearing all users' data: " + e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 * * SUN")
+    public void scheduleClearAllUserData() {
+        clearAllUserData();
     }
 }

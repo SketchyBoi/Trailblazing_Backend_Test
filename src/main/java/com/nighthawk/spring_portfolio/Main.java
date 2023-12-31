@@ -2,6 +2,7 @@ package com.nighthawk.spring_portfolio;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 // @SpringBootApplication annotation is the key to building web applications with Java https://spring.io/projects/spring-boot
 @SpringBootApplication
