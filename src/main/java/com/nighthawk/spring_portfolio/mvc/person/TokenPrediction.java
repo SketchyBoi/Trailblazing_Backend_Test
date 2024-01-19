@@ -71,6 +71,7 @@ class GeolocationRewardSystem {
         System.out.println("Total distance " + totalDistance);
         // Bonus rewards for distance thresholds
         double distanceBonus = calculateDistanceBonus(totalDistance);
+        System.out.println(distanceBonus);
 
         // Combine the rewards with a weighting factor for each
         double combinedReward = (0.6 * speedReward + 0.4 * distanceBonus);
@@ -97,10 +98,12 @@ class GeolocationRewardSystem {
 
     private double calculateDistanceBonus(double totalDistance) {
         // Bonus rewards based on distance thresholds
-        if (totalDistance > 5000.0) {
-            return 20;   // Bonus 5 coins for distances greater than 5000 meters
-        } else if (totalDistance > 10000.0) {
-            return 50;  // Bonus 10 coins for distances greater than 10000 meters
+        if (totalDistance > 10000.0) {
+            return totalDistance * 0.040;
+        } else if (totalDistance > 5000.0) {
+            return totalDistance * 0.030;
+        } else if (totalDistance > 1000.0) {
+            return totalDistance * 0.015;
         } else {
             return 0;   // No bonus for distances below the thresholds
         }
