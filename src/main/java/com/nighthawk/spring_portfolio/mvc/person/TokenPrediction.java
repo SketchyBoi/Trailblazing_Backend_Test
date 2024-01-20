@@ -81,18 +81,18 @@ class GeolocationRewardSystem {
 
     private double calculateSpeedReward(double averageSpeed) {
         // Assuming average speed is in meters per second
-        if (averageSpeed > 4.5) {
-            return 30;  // Reward 30 coins for average speeds greater than 4.5 m/s (faster running)
-        } else if (averageSpeed > 3.5) {
-            return 23;  // Reward 23 coins for average speeds between 3.5 and 4.5 m/s
+        if (averageSpeed > 3.5) {
+            return 30 * averageSpeed;  // Reward 30 coins for average speeds greater than 4.5 m/s (faster running)
         } else if (averageSpeed > 3.0) {
-            return 15;  // Reward 15 coins for average speeds between 3.0 and 3.5 m/s
+            return 23 * averageSpeed;  // Reward 23 coins for average speeds between 3.5 and 4.5 m/s
         } else if (averageSpeed > 2.5) {
-            return 10;  // Reward 10 coins for average speeds between 2.5 and 3.0 m/s
+            return 15 * averageSpeed;  // Reward 15 coins for average speeds between 3.0 and 3.5 m/s
         } else if (averageSpeed > 2.0) {
-            return 4;   // Reward 4 coins for average speeds between 2.0 and 2.5 m/s
+            return 10 * averageSpeed;  // Reward 10 coins for average speeds between 2.5 and 3.0 m/s
+        } else if (averageSpeed > 1.5) {
+            return 4 * averageSpeed;   // Reward 4 coins for average speeds between 2.0 and 2.5 m/s
         } else {
-            return 1;   // Reward 1 coin for average speeds less than 2.0 m/s (walking)
+            return 1 * averageSpeed;   // Reward 1 coin for average speeds less than 2.0 m/s (walking)
         }
     }
 
